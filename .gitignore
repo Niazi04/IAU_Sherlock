@@ -1,0 +1,15 @@
+.env
+*.txt
+
+
+.venv
+__pycache__
+temp
+
+
+
+!README.md
+!README_FA.md
+!PROJECT.md
+!PROJECT_FA.md
+!requirements.txt
