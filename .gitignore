@@ -5,6 +5,7 @@
 .venv
 __pycache__
 temp
+qdrant_data
 
 
 

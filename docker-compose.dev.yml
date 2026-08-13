@@ -1,0 +1,46 @@
+services:
+  middleware:
+    build:
+      dockerfile: Dockerfile
+    container_name: IAU-Sherlock-Middleware
+    networks:
+      - IAU-Sherlock-Net
+    ports:
+      - "8000:8000"
+    
+    restart: unless-stopped
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    
+    depends_on:
+      qdrant:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+  
+  qdrant:
+    image: docker.arvancloud.ir/qdrant/qdrant:latest
+    ports:
+      - "6010:6333"
+    networks:
+      - IAU-Sherlock-Net
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+
+volumes:
+  qdrant_data:
+
+networks:
+  IAU-Sherlock-Net:
+    driver: bridge

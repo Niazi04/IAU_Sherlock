@@ -1,0 +1,11 @@
+.env
+*.txt
+*md
+
+
+.venv
+__pycache__
+temp
+.git
+
+!requirements.txt

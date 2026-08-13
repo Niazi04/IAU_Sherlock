@@ -1,5 +1,6 @@
-fastapi[standard]
-qdrant-client
+fastapi==0.115.0
+qdrant-client==1.11.0
 openai
 httpx
-uvicorn
+uvicorn[standard]==0.30.6
+pydantic_settings==2.4.0
