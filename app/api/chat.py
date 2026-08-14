@@ -7,14 +7,15 @@ from fastapi import (
 )
 from typing import Optional, List
 
-from app.logic.llm_wrapper import async_generate
+# from app.logic.llm_wrapper import async_generate
+from app.logic.orchestrator import pipeline
 from app.schemas.api_schema.chat_schema import (
     ChatReq,
     ChatStreamReq
 )
 
 router = APIRouter(
-    prefix="/chat",
+    prefix="/sherlock",
     tags=["Chat"]
 )
 
@@ -32,19 +33,12 @@ async def chat(
     request: ChatReq
 ):
     try:
-        res = await async_generate(
-            [
-                {
-                    "role": "system",
-                    "content": "You are a helpful scientific assistant"
-                },
-                {
-                    "role": "user",
-                    "content": request.query}
-            ]
+        generated_answer = await  pipeline(
+            query=request.query,
+            history=request.history
         )
 
-        return responses.JSONResponse({"res": res})
+        return responses.JSONResponse({"answer": generated_answer})
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

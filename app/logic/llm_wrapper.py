@@ -51,15 +51,21 @@ def _build_params(
     )
 
 async def async_generate(
-    msg:            List[Dict[str, str]],
-    temp:           Optional[float]       = None,
-    max_tokens:     Optional[int]         = None,
-    llm_model_name: Optional[str]         = None,
+    msg:              List[Dict[str, str]],
+    temp:             Optional[float]       = None,
+    max_tokens:       Optional[int]         = None,
+    llm_model_name:   Optional[str]         = None,
+    reasoning_effort: Optional[str]         = None,
 
 ):
     if _client is None: await _get_client()
 
-    params = _build_params()
+    params = _build_params(
+        temp             = temp,
+        max_tokens       = max_tokens,
+        llm_model_name   = llm_model_name,
+        reasoning_effort = reasoning_effort
+    )
     try:
         res = await _client.chat.completions.create(
             messages=msg,
