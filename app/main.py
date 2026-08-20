@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import logging
 from contextlib import asynccontextmanager
 
-from app.api import chat
+from app.api import chat, faq
 from app.core.config import settings
 from app.logic.llm_wrapper import _get_client
 
@@ -24,15 +24,23 @@ async def lifespan(app: FastAPI):
     logger.info("[Start Up] Establishing connection to LLM")
     await _get_client()
 
-    yield
 
     # ── RAG Qdrant collection ─────────────────────────────────────────────────
-    # try:
-    #     from app.services.vector_store import vector_store_client
-    #     vector_store_client._get_sync_client()
-    #     logger.info("✓ RAG Qdrant collection ready")
-    # except Exception as e:
-    #     logger.warning(f"⚠ RAG Qdrant init failed: {e}")
+    try:
+        from app.logic.vector_store import vector_store
+        vector_store._get_sync_client()
+        logger.info("✓ RAG Qdrant collection ready")
+    except Exception as e:
+        logger.warning(f"⚠ RAG Qdrant init failed: {e}")
+
+    try:
+        from app.logic.faq_store import faq_store
+        faq_store._get_sync_client()
+        logger.info("✓ FAQ Qdrant collection ready")
+    except Exception as e:
+        logger.warning(f"⚠ FAQ Qdrant init failed: {e}")
+
+    yield
 
 
 
@@ -44,6 +52,7 @@ app = FastAPI(
 )
 
 app.include_router(chat.router)
+app.include_router(faq.router)
 
 @app.get("/health")
 def  health():

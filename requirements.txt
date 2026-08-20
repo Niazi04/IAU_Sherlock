@@ -4,3 +4,4 @@ openai
 httpx
 uvicorn[standard]==0.30.6
 pydantic_settings==2.4.0
+langchain-text-splitters
