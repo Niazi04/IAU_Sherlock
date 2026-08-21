@@ -1,5 +1,5 @@
 import openai
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, AsyncGenerator
 import logging
 
 from app.core.config import settings
@@ -47,7 +47,6 @@ def _build_params(
         top_p            = settings.LLM_TOP_P,
         max_tokens       = max_tokens if max_tokens is not None else settings.LLM_MAX_TOKEN,
         reasoning_effort = reasoning_effort if reasoning_effort is not None else settings.LLM_REASONING_EFFORT 
-        # seed        = settings.LLM_SEED, -> for some reason google gemeni does not support seed
     )
 
 async def async_generate(
@@ -70,6 +69,7 @@ async def async_generate(
         res = await _client.chat.completions.create(
             messages=msg,
             stream=False,
+            timeout=45,
             **params
         )
 
@@ -83,6 +83,36 @@ async def async_generate(
         logger.warning(f"[LLM] {str(e)}")
         raise
 
-async def async_generate_stream():
-    #TODO
-    pass
+async def async_generate_stream(
+    msg: List[Dict[str, str]],
+    temp: Optional[float] = None,
+    max_tokens: Optional[int] = None,
+    llm_model_name: Optional[str] = None,
+    reasoning_effort: Optional[str] = None,
+) -> AsyncGenerator[str, None]:
+    if _client is None:
+        await _get_client()
+
+    params = _build_params(
+        temp=temp,
+        max_tokens=max_tokens,
+        llm_model_name=llm_model_name,
+        reasoning_effort=reasoning_effort
+    )
+    
+    try:
+        stream = await _client.chat.completions.create(
+            messages=msg,
+            stream=True,
+            timeout=45,
+            **params
+        )
+
+        async for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                yield chunk.choices[0].delta.content
+                
+    except Exception as e:
+        logger.warning("[LLM] Something went wrong while generating streaming response:")
+        logger.warning(f"[LLM] {str(e)}")
+        raise

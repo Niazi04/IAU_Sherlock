@@ -24,15 +24,6 @@ async def lifespan(app: FastAPI):
     logger.info("[Start Up] Establishing connection to LLM")
     await _get_client()
 
-
-    # ── RAG Qdrant collection ─────────────────────────────────────────────────
-    try:
-        from app.logic.vector_store import vector_store
-        vector_store._get_sync_client()
-        logger.info("✓ RAG Qdrant collection ready")
-    except Exception as e:
-        logger.warning(f"⚠ RAG Qdrant init failed: {e}")
-
     try:
         from app.logic.faq_store import faq_store
         faq_store._get_sync_client()

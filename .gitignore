@@ -1,12 +1,15 @@
 .env
 *.txt
-
+*.htm
+*.html
+*.docx
+*.pdf
 
 .venv
 __pycache__
 temp
 qdrant_data
-
+embedding_data
 
 
 !README.md

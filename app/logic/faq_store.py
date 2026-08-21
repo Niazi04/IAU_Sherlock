@@ -259,8 +259,6 @@ class FAQStore:
                     "source":     source,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                 }
-                if "category" in it and it["category"] is not None:
-                    payload["category"] = it["category"]
                 for k, v in it.items():
                     if k not in ("id", "question", "answer", "embedding_text", "category"):
                         payload[k] = v

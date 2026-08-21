@@ -7,15 +7,16 @@ services:
       - IAU-Sherlock-Net
     ports:
       - "8000:8000"
-    
+
     restart: unless-stopped
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    
+
     depends_on:
       qdrant:
         condition: service_started
+
     healthcheck:
       test:
         [
@@ -28,42 +29,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-  # vllm:
-  #   image: docker.arvancloud.ir/vllm/vllm-openai:nightly
-  #   container_name: IAU-Sherlock-vLLM
 
-  #   ports:
-  #     - "8001:8000"
-
-  #   networks:
-  #     - IAU-Sherlock-Net
-
-  #   volumes:
-  #     - "F:/models/qwen3_4b:/models/qwen3_4b:ro"
-
-  #   command:
-  #     - "--model"
-  #     - "/models/qwen3_4b"
-  #     - "--served-model-name"
-  #     - "qwen3_4b"
-  #     - "--host"
-  #     - "0.0.0.0"
-  #     - "--port"
-  #     - "8000"
-
-  #   ipc: host
-
-  #   gpus: all
-
-  #   restart: unless-stopped
   qdrant:
     image: docker.arvancloud.ir/qdrant/qdrant:latest
+    container_name: IAU-Sherlock-Qdrant
     ports:
       - "6010:6333"
     networks:
       - IAU-Sherlock-Net
     volumes:
       - ./qdrant_data:/qdrant/storage
+    restart: unless-stopped
 
 volumes:
   qdrant_data:

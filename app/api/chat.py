@@ -6,9 +6,10 @@ from fastapi import (
     responses
 )
 from typing import Optional, List
+from fastapi.responses import StreamingResponse
 
 # from app.logic.llm_wrapper import async_generate
-from app.logic.orchestrator import pipeline
+from app.logic.orchestrator import pipeline, pipeline_stream
 from app.schemas.api_schema.chat_schema import (
     ChatReq,
     ChatStreamReq
@@ -23,11 +24,7 @@ router = APIRouter(
 @router.post(
         "/chat",
         status_code=200,
-        summary="Hello World to keep traditions alive",
-        description=(
-            "My first hello world was in C++ "
-            "I guess no one forgets that "
-        )
+        summary="Generated the entire respoonse and then return them (Non-streaming)",
 )
 async def chat(
     request: ChatReq
@@ -44,15 +41,24 @@ async def chat(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
-
-@router.get(
-    "/hello-world",
-    status_code=200,
-    summary="Hello World to keep traditions alive",
-    description=(
-        "My first hello world was in C++ "
-        "I guess no one forgets that "
-    )
-)
-def hello_world():
-    return responses.JSONResponse({"res": "hello world"})
+@router.post("/stream")
+async def chat(request: ChatReq):
+    try:
+        return StreamingResponse(
+            pipeline_stream(
+                query=request.query,
+                history=request.history
+            ),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                # "X-Accel-Buffering": "no"  # Disable nginx buffering if you use nginx
+            }
+        )
+            
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
