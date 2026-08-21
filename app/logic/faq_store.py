@@ -1,29 +1,3 @@
-"""
-faq_store.py
-============
-
-FAQ Question-Answer Embedding Strategy with Cross-Encoder Reranking
-====================================================================
-
-Storage:  bi-encoder (multilingual-e5) for fast ANN candidate retrieval
-Scoring:  cross-encoder (mmarco-mMiniLMv2) for calibrated relevance scoring
-
-Two-stage pipeline per query (BGE-M3 — no query/passage prefixes):
-  Stage 1 → bi-encoder search   : fetch top-K candidates fast from Qdrant
-  Stage 2 → cross-encoder rerank: score each (query, candidate_question) pair
-                                  and use that score for tier decision
-
-Payload schema per Qdrant point:
-  {
-    "faq_id":     int | str,
-    "question":   str,
-    "answer":     str,
-    "category":   str | None,
-    "source":     str,
-    "created_at": str   (ISO UTC)
-  }
-"""
-
 import uuid
 import logging
 from datetime import datetime, timezone
@@ -35,64 +9,39 @@ from qdrant_client.http import models as qmodels
 from app.core.config import settings
 from app.logic.embedding import embed_query, embed_text
 from app.utils.text_preprocessor import normalise_farsi_chars
-import re  # Add this to existing imports
+import re
 
 logger = logging.getLogger(__name__)
 
-
-
-
-
-
-
-# Add this function to faq_store.py after the imports and before the FAQMatch class
-
 def split_questions(text: str, delimiter: str = "\n") -> List[str]:
-    """
-    Split a text containing multiple questions into individual questions.
-    
-    Args:
-        text: The raw text containing questions (one per line or delimiter-separated)
-        delimiter: The delimiter to split on (default: newline)
-    
-    Returns:
-        List of cleaned, non-empty question strings
-    """
     if not text or not text.strip():
         return []
     
-    # Split by delimiter
     raw_questions = text.split(delimiter)
     
-    # Clean each question
     questions = []
     for q in raw_questions:
         cleaned = q.strip()
         # Remove common numbering/bullet prefixes
         if cleaned:
-            # Remove patterns like "1.", "2.", "-", "*", etc.
             cleaned = re.sub(r'^\d+[\.\)]\s*', '', cleaned)
             cleaned = re.sub(r'^[\-\*\•]\s*', '', cleaned)
             questions.append(cleaned)
     
-    # Filter out empty strings and very short ones (less than 3 chars)
     questions = [q for q in questions if len(q) >= 3]
     
     return questions
 
 
-# ─── FAQ result type ──────────────────────────────────────────────────────────
 
 class FAQMatch:
-    """A matched FAQ entry with cross-encoder relevance score."""
-
     def __init__(
         self,
         faq_id: Any,
         question: str,
         answer: str,
-        score: float = 0.0,         # cross-encoder score (0–1), NOT bi-encoder
-        bi_score: float = 0.0,      # original bi-encoder score (for debug)
+        score: float = 0.0,  
+        bi_score: float = 0.0,   
         category: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
@@ -120,11 +69,6 @@ class FAQMatch:
 
 
 class FAQStore:
-    """
-    Qdrant-backed FAQ store with two-stage retrieval:
-    1. Bi-encoder ANN (fast, approximate)
-    2. Cross-encoder reranking (slow but calibrated)
-    """
 
     def __init__(self):
         self._async_client: Optional[AsyncQdrantClient] = None
@@ -202,7 +146,6 @@ class FAQStore:
         q_norm = normalise_farsi_chars(question.strip())
         a_norm = normalise_farsi_chars(answer.strip())
 
-        # BGE-M3: no prefix needed
         vector = await embed_query(q_norm)
 
         point_id = str(uuid.uuid4())
@@ -286,12 +229,6 @@ class FAQStore:
         filter_dict: Optional[Dict[str, Any]] = None,
         collection: Optional[str] = None,
     ) -> List[FAQMatch]:
-        """
-        FAQ search using bi-encoder ANN only (no reranking).
-        
-        Returns top `limit` results with their bi-encoder scores.
-        The `score_threshold` applies to the bi-encoder cosine score.
-        """
         col = collection or self.collection_name
         await self._ensure_async(col)
         client = await self._get_async_client()
@@ -303,9 +240,7 @@ class FAQStore:
         if (info.points_count or 0) == 0:
             return []
 
-        # Remove reranking, just fetch exactly what we need
-        # (or slightly more if you want, but since no reranking, just use limit)
-        fetch_k = limit  # Or keep some buffer if you want: max(limit * 2, limit)
+        fetch_k = limit
 
         qdrant_filter = None
         if filter_dict:
@@ -323,13 +258,12 @@ class FAQStore:
             limit=fetch_k,
             query_filter=qdrant_filter,
             with_payload=True,
-            score_threshold=score_threshold,  # This now applies to bi-encoder scores
+            score_threshold=score_threshold,
         )
 
         if not result.points:
             return []
 
-        # Extract payload and build FAQMatch objects
         matches: List[FAQMatch] = []
         for hit in result.points:
             if not hit.payload:
@@ -340,8 +274,8 @@ class FAQStore:
                 faq_id=p.get("faq_id"),
                 question=p.get("question", ""),
                 answer=p.get("answer", ""),
-                score=hit.score,  # Use bi-encoder score as the main score
-                bi_score=hit.score,  # Store bi-encoder score separately if needed
+                score=hit.score,
+                bi_score=hit.score, 
                 category=p.get("category"),
                 metadata={k: v for k, v in p.items()
                         if k not in ("faq_id", "question", "answer", "category")},
@@ -401,6 +335,4 @@ class FAQStore:
         result, _ = await client.scroll(collection_name=col, limit=limit, with_payload=True)
         return [p.payload for p in result if p.payload]
 
-
-# ─── Singleton ────────────────────────────────────────────────────────────────
 faq_store = FAQStore()
