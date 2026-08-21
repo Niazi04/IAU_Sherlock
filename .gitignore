@@ -4,6 +4,7 @@
 *.html
 *.docx
 *.pdf
+*.snapshot
 
 .venv
 __pycache__

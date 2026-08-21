@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     LLM_SEED:             int   = 0
     CONTEXT_WINDOW:       int   = 0
 
-    TICKET_API_KEY: str = ""
+    UI_API_KEY: str = ""
 
     EMBEDDING_SERVICE_URL: str = ""
     NVIDIA_API_KEY:        str = ""
@@ -40,17 +40,3 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
-
-
-# LLM_API_URL:     str   = getenv("LLM_API_URL",    "")
-    # LLM_MODEL_NAME:  str   = getenv("LLM_MODEL_NAME", "")
-    # LLM_API_KEY:     str   = getenv("LLM_API_KEY",    "")
-    # LLM_TEMP:        float = getenv("LLM_TEMP",       0.0)
-    # LLM_TOP_K:       int   = getenv("LLM_TOP_K",      4)
-    # LLM_MAX_TOKEN:   int   = getenv("LLM_MAX_TOKEN",  4)
-    # LLM_SEED:        int   = getenv("LLM_SEED",       67)
-    # CONTEXT_WINDOW:  int   = getenv("CONTEXT_WINDOW", 4096)
-
-
-    # QDRNAT_URL:      str = getenv("QDRNAT_URL",       "")
-    # COLLECTION_NAME: str = getenv("COLLECTION_NAME",  "")
