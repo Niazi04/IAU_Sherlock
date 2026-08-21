@@ -7,7 +7,7 @@ const AppConfig = {
   // Use 127.0.0.1 or localhost, NOT 0.0.0.0 (which is for server binding only)
   apiUrl: 'http://127.0.0.1:8000/sherlock/chat', 
   
-  apiKey: 'TheLacedMyShit',
+  apiKey: 'VerySecure!API!key',
   
   noAnswerMessage: 'متاسفم، پاسخی برای این سوال پیدا نکردم.',
   
