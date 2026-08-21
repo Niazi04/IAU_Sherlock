@@ -1,11 +1,14 @@
 .env
 *.txt
-*md
+*.md
 
 
 .venv
 __pycache__
 temp
 .git
+embedding_data
+docs
+sample_frontend
 
 !requirements.txt
