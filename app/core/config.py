@@ -16,7 +16,10 @@ class Settings(BaseSettings):
     LLM_SEED:             int   = 0
     CONTEXT_WINDOW:       int   = 0
 
-    EMBEDDING_SERVICE_URL: str = "http://192.168.91.17:8010"
+    TICKET_API_KEY: str = ""
+
+    EMBEDDING_SERVICE_URL: str = ""
+    NVIDIA_API_KEY:        str = ""
     EMBEDDING_DIM:         str = ""
     EMBED_BATCH_SIZE:      int = 0
     EMBED_TIMEOUT:         float = 30.0

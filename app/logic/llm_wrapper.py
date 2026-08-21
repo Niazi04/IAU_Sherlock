@@ -1,9 +1,15 @@
 import openai
+from openai import APIStatusError, RateLimitError,AuthenticationError
 from typing import Optional, List, Dict, AsyncGenerator
 import logging
+import httpx
 
 from app.core.config import settings
-
+from app.utils.cutom_exceptions import (
+    APIKeyInvalid,
+    RateLimit,
+    ProviderAPIErr
+)
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -77,6 +83,32 @@ async def async_generate(
         logger.debug(f"[LLM] {res.choices[0].message.content}")
         return res.choices[0].message.content
         
+    except APIStatusError as e:
+        status_code = e.status_code
+        if status_code == 429:
+            logger.critical("[LLM] You have hit your rate limit")
+            logger.critical(f"[LLM] error: {str(e)}")
+            raise RateLimit(
+                "Rate Limit of 40req/min is hit. Please wait for a minute and then try again"
+            )
+        elif status_code == 403:
+            logger.critical("[LLM] Invalid API key is used. check the .env file")
+            logger.critical(f"[LLM] error: {str(e)}")
+            raise APIKeyInvalid(
+                "API Key is invalid. Put the correct API Key in .env file"
+            )
+        elif status_code == 401:
+            logger.critical("[LLM] Authentication failed")
+            logger.critical(f"[LLM] error: {str(e)}")
+            raise APIKeyInvalid(
+                "Authentication failed. Check your API key."
+            )
+        else:
+            logger.critical("[LLM] API Gateway error")
+            logger.critical(f"[LLM] error: {str(e)}")
+            raise ProviderAPIErr(
+                "The LLM provider gateway is malfunctioning"
+            )
     
     except Exception as e:
         logger.warning("[LLM] Something went wrong while generating an answer:")
@@ -115,4 +147,4 @@ async def async_generate_stream(
     except Exception as e:
         logger.warning("[LLM] Something went wrong while generating streaming response:")
         logger.warning(f"[LLM] {str(e)}")
-        raise
+        raise e

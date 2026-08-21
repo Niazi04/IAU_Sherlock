@@ -5,19 +5,25 @@ from fastapi import (
     status,
     responses
 )
+import httpx
 from typing import Optional, List
 from fastapi.responses import StreamingResponse
 
-# from app.logic.llm_wrapper import async_generate
 from app.logic.orchestrator import pipeline, pipeline_stream
 from app.schemas.api_schema.chat_schema import (
     ChatReq,
     ChatStreamReq
 )
+from app.utils.cutom_exceptions import (
+    APIKeyInvalid,
+    RateLimit,
+)
+from app.core.dependencies import get_api_key
 
 router = APIRouter(
     prefix="/sherlock",
-    tags=["Chat"]
+    tags=["Chat"],
+    dependencies=[Depends(get_api_key)]
 )
 
 
@@ -30,17 +36,27 @@ async def chat(
     request: ChatReq
 ):
     try:
-        generated_answer = await  pipeline(
+        generated_answer = await pipeline(
             query=request.query,
             history=request.history
         )
-
         return responses.JSONResponse({"answer": generated_answer})
+    except RateLimit as e:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(e)
+        )
+    except APIKeyInvalid as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+    
 @router.post("/stream")
 async def chat(request: ChatReq):
     try:

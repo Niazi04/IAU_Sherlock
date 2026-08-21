@@ -122,11 +122,13 @@ async def pipeline(
     final_llm_content: str = ""
 
     for i in range(1, 4):
-        try:
-            llm = await async_generate(msg=conversation)
-        except Exception as e:
-            logger.warning("[orchestrator] Things went wrong while retrieving data")
-            logger.warning(f"[orchestrator] Err Msg: {str(e)}")
+        # try:
+        #     llm = await async_generate(msg=conversation)
+        # except Exception as e:
+        #     logger.warning("[orchestrator] Things went wrong while retrieving data")
+        #     logger.warning(f"[orchestrator] Err Msg: {str(e)}")
+
+        llm = await async_generate(msg=conversation)
 
         action, value = _parse_llm(llm)
 
@@ -188,12 +190,13 @@ async def synthesis_agent(ctx: str, query: str, history: Optional[T_History] = N
         history = clean_history,
         ctx = ctx
     )
-    try:
-        synthesis = await async_generate(conversation)
-    except Exception as e:
-        logger.warning("[orchestrator] Things went wrong while synthesizing an answer")
-        logger.warning(f"[orchestrator] Err Msg: {str(e)}")
+    # try:
+    #     synthesis = await async_generate(conversation)
+    # except Exception as e:
+    #     logger.warning("[orchestrator] Things went wrong while synthesizing an answer")
+    #     logger.warning(f"[orchestrator] Err Msg: {str(e)}")
 
+    synthesis = await async_generate(conversation)
     return synthesis.strip()
 
 def _build_conv(
