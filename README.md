@@ -2,7 +2,7 @@
 
 **🇬🇧 EN** | [🇮🇷 FA](README_FA.md)
 
-This is my bachelors final project revolding around **Retrieval-Augmented Generation (RAG)**
+This is my bachelors final project revolving around **Retrieval-Augmented Generation (RAG)**
 
 In this project, I implemented a full featured RAG chatbot.
 
